@@ -1,0 +1,13 @@
+{
+  "name": "work-log-stats",
+  "version": "1.0.0",
+  "description": "工作日志统计系统 - 基于Web的轻量级日志管理工具",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'No build step needed for this static project'",
+    "start": "npx http-server -p 8000"
+  },
+  "keywords": ["work-log", "stats", "webapp"],
+  "author": "EchoOfCloud",
+  "license": "MIT"
+}
