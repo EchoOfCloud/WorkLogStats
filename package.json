@@ -4,7 +4,7 @@
   "description": "工作日志统计系统",
   "main": "index.html",
   "scripts": {
-    "build": "echo '纯静态项目，无需构建'"
+    "build": "if not exist dist mkdir dist && copy index.html dist && copy style.css dist && copy app.js dist && copy chart.js dist"
   },
   "keywords": ["工作日志", "统计", "前端"],
   "author": "",
