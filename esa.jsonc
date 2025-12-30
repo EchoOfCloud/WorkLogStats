@@ -1,0 +1,11 @@
+{
+  "version": "1",
+  "staticAssets": {
+    "directory": ".",
+    "index": "index.html"
+  },
+  "build": {
+    "command": "npm run build",
+    "outputDir": "."
+  }
+}
