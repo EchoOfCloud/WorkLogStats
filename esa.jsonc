@@ -2,14 +2,10 @@
   "version": 2,
   "build": {
     "command": "npm run build",
-    "distPath": "."
+    "distPath": "dist"
   },
   "server": {
     "framework": "static"
   },
-  "assets": {
-    "root": ".",
-    "include": ["**/*"],
-    "exclude": ["node_modules/**", ".git/**"]
-  }
+  "staticAssets": ["."]
 }
