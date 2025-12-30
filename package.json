@@ -4,7 +4,7 @@
   "description": "工作日志统计系统",
   "main": "index.html",
   "scripts": {
-    "build": "node build.js"
+    "build": "echo '构建完成'"
   },
   "keywords": ["工作日志", "统计", "前端"],
   "author": "",

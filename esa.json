@@ -5,6 +5,6 @@
     "outputDir": "dist"
   },
   "staticAssets": {
-    "directory": "dist"
+    "directory": "./dist"
   }
 }
