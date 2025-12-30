@@ -1,0 +1,12 @@
+{
+  "name": "work-log-stats",
+  "version": "1.0.0",
+  "description": "工作日志统计系统",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo '纯静态项目，无需构建'"
+  },
+  "keywords": ["工作日志", "统计", "前端"],
+  "author": "",
+  "license": "MIT"
+}
