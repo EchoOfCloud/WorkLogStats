@@ -66,7 +66,14 @@
                 </div>
                 
                 <div class="chart-container">
-                    <h3>最近7天日志统计</h3>
+                    <div class="chart-header">
+                        <h3>日志统计</h3>
+                        <div class="time-range-selector">
+                            <button class="time-range-btn active" data-range="7">最近7天</button>
+                            <button class="time-range-btn" data-range="30">最近30天</button>
+                            <button class="time-range-btn" data-range="365">最近一年</button>
+                        </div>
+                    </div>
                     <canvas id="logChart"></canvas>
                 </div>
             </section>

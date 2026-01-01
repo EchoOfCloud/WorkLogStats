@@ -6,6 +6,7 @@ let currentPage = 1;
 const itemsPerPage = 10;
 let filteredLogs = [];
 let companyName = 'EchoOfCloud'; // 公司名称，默认为"EchoOfCloud"
+let currentTimeRange = 7; // 当前时间范围，默认7天
 
 // DOM元素引用
 const navLinks = document.querySelectorAll('.nav-link');
@@ -157,6 +158,24 @@ function addEventListeners() {
     const companyNameInput = document.getElementById('company-name');
     if (companyNameInput) {
         companyNameInput.value = companyName;
+    }
+    
+    // 时间范围选择器事件监听
+    const timeRangeBtns = document.querySelectorAll('.time-range-btn');
+    if (timeRangeBtns && timeRangeBtns.length > 0) {
+        timeRangeBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                // 更新按钮状态
+                timeRangeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                // 更新当前时间范围
+                currentTimeRange = parseInt(btn.getAttribute('data-range'));
+                
+                // 更新图表
+                updateChart();
+            });
+        });
     }
     
     // 保存公司名称按钮事件监听
@@ -1267,26 +1286,61 @@ function updateChart() {
     
     const labels = [];
     const data = [];
+    const today = new Date();
     
-    // 最近7天的日期
-    for (let i = 6; i >= 0; i--) {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        const dateStr = date.toISOString().split('T')[0];
-        const formattedDate = `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
-        
-        labels.push(formattedDate);
-        // 统计当天的日志数量
-        const dayLogs = logs.filter(log => log.date === dateStr);
-        data.push(dayLogs.length);
-        console.log(`日期: ${dateStr}, 日志数量: ${dayLogs.length}`);
+    // 根据当前时间范围生成数据
+    if (currentTimeRange === 365) {
+        // 最近一年，按月统计
+        for (let i = 11; i >= 0; i--) {
+            const date = new Date();
+            date.setMonth(today.getMonth() - i);
+            date.setDate(1);
+            const year = date.getFullYear();
+            const month = (date.getMonth() + 1).toString().padStart(2, '0');
+            const monthStr = `${year}-${month}`;
+            const formattedDate = `${year}-${month}`;
+            
+            labels.push(formattedDate);
+            // 统计当月的日志数量
+            const monthLogs = logs.filter(log => log.date.startsWith(monthStr));
+            data.push(monthLogs.length);
+        }
+    } else {
+        // 最近7天或30天，按天统计
+        for (let i = currentTimeRange - 1; i >= 0; i--) {
+            const date = new Date();
+            date.setDate(today.getDate() - i);
+            const dateStr = date.toISOString().split('T')[0];
+            const formattedDate = `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`;
+            
+            labels.push(formattedDate);
+            // 统计当天的日志数量
+            const dayLogs = logs.filter(log => log.date === dateStr);
+            data.push(dayLogs.length);
+        }
     }
     
     // 更新图表数据
     logChart.data.labels = labels;
     logChart.data.datasets[0].data = data;
+    
+    // 更新图表标题
+    let chartTitle = '';
+    switch(currentTimeRange) {
+        case 7:
+            chartTitle = '最近7天日志统计';
+            break;
+        case 30:
+            chartTitle = '最近30天日志统计';
+            break;
+        case 365:
+            chartTitle = '最近一年日志统计';
+            break;
+    }
+    logChart.options.plugins.title.text = chartTitle;
+    
     logChart.update();
-    console.log('图表数据已更新:', { labels, data });
+    console.log('图表数据已更新:', { labels, data, currentTimeRange });
 }
 
 // 切换统计标签页
