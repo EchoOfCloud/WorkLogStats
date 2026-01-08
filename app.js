@@ -7,6 +7,7 @@ const itemsPerPage = 10;
 let filteredLogs = [];
 let companyName = 'EchoOfCloud'; // 公司名称，默认为"EchoOfCloud"
 let currentTimeRange = 7; // 当前时间范围，默认7天
+let commonLogs = []; // 常用日志列表
 
 // DOM元素引用
 const navLinks = document.querySelectorAll('.nav-link');
@@ -67,6 +68,9 @@ function initApp() {
     // 显示当日日志列表
     showTodayLogs();
     
+    // 初始化常用日志下拉列表
+    initCommonLogsSelect();
+    
     // 确保在数据加载后更新图表
     setTimeout(() => {
         if (logChart) {
@@ -88,6 +92,13 @@ function loadFromLocalStorage() {
     if (storedCompanyName) {
         companyName = storedCompanyName;
         console.log('从本地存储加载了公司名称:', companyName);
+    }
+    
+    // 加载常用日志
+    const storedCommonLogs = localStorage.getItem('commonLogs');
+    if (storedCommonLogs) {
+        commonLogs = JSON.parse(storedCommonLogs);
+        console.log('从本地存储加载了', commonLogs.length, '条常用日志');
     }
 }
 
@@ -152,6 +163,125 @@ function saveCompanyName(name) {
     localStorage.setItem('companyName', name);
 }
 
+// 保存常用日志到本地存储
+function saveCommonLogs() {
+    localStorage.setItem('commonLogs', JSON.stringify(commonLogs));
+}
+
+// 添加常用日志
+function addCommonLog(content, category, tags) {
+    const newCommonLog = {
+        id: generateId(),
+        content: content,
+        category: category || '日常工作',
+        tags: tags || []
+    };
+    commonLogs.push(newCommonLog);
+    saveCommonLogs();
+    return newCommonLog;
+}
+
+// 从统计页面添加到常用日志
+function addToCommonLogsFromStats(content) {
+    if (!content || content.trim() === '') {
+        showToast('日志内容不能为空', 'warning');
+        return;
+    }
+    
+    const trimmedContent = content.trim();
+    
+    if (commonLogs.some(log => log.content === trimmedContent)) {
+        showToast('该日志已在常用日志中', 'warning');
+        return;
+    }
+    
+    addCommonLog(trimmedContent, '日常工作', []);
+    showToast('已添加到常用日志', 'success');
+    
+    // 重新渲染常用日志列表和下拉选择
+    renderCommonLogsList();
+    initCommonLogsSelect();
+    
+    // 重新显示常用日志统计，以更新按钮状态
+    showCommonStats();
+}
+
+// 删除常用日志
+function deleteCommonLog(id) {
+    commonLogs = commonLogs.filter(log => log.id !== id);
+    saveCommonLogs();
+}
+
+// 更新常用日志
+function updateCommonLog(id, content, category, tags) {
+    const index = commonLogs.findIndex(log => log.id === id);
+    if (index !== -1) {
+        commonLogs[index] = {
+            ...commonLogs[index],
+            content: content,
+            category: category || '日常工作',
+            tags: tags || []
+        };
+        saveCommonLogs();
+    }
+}
+
+// 上移常用日志
+function moveCommonLogUp(id) {
+    const index = commonLogs.findIndex(log => log.id === id);
+    if (index > 0) {
+        [commonLogs[index], commonLogs[index - 1]] = [commonLogs[index - 1], commonLogs[index]];
+        saveCommonLogs();
+    }
+}
+
+// 下移常用日志
+function moveCommonLogDown(id) {
+    const index = commonLogs.findIndex(log => log.id === id);
+    if (index < commonLogs.length - 1) {
+        [commonLogs[index], commonLogs[index + 1]] = [commonLogs[index + 1], commonLogs[index]];
+        saveCommonLogs();
+    }
+}
+
+// 初始化常用日志下拉列表
+function initCommonLogsSelect() {
+    const commonLogsSelect = document.getElementById('common-logs-select');
+    if (!commonLogsSelect) return;
+    
+    commonLogsSelect.innerHTML = '<option value="">选择常用日志...</option>';
+    
+    commonLogs.forEach(commonLog => {
+        const option = document.createElement('option');
+        option.value = commonLog.id;
+        option.textContent = commonLog.content.substring(0, 50) + (commonLog.content.length > 50 ? '...' : '');
+        option.dataset.content = commonLog.content;
+        option.dataset.category = commonLog.category;
+        option.dataset.tags = commonLog.tags.join(',');
+        commonLogsSelect.appendChild(option);
+    });
+}
+
+// 选择常用日志
+function selectCommonLog(id) {
+    const commonLog = commonLogs.find(log => log.id === id);
+    if (!commonLog) return;
+    
+    const contentInput = document.getElementById('log-content');
+    const currentContent = contentInput.value;
+    
+    if (currentContent.trim() === '') {
+        contentInput.value = commonLog.content;
+    } else {
+        contentInput.value = currentContent + '\n' + commonLog.content;
+    }
+    
+    document.getElementById('log-category').value = commonLog.category;
+    document.getElementById('log-tags').value = commonLog.tags.join(', ');
+    
+    showToast('已加载常用日志');
+}
+
 // 添加事件监听器
 function addEventListeners() {
     // 初始化公司名称输入框
@@ -196,6 +326,18 @@ function addEventListeners() {
     if (logDateInput) {
         logDateInput.addEventListener('change', showTodayLogs);
     }
+    
+    // 常用日志下拉选择事件监听
+    const commonLogsSelect = document.getElementById('common-logs-select');
+    if (commonLogsSelect) {
+        commonLogsSelect.addEventListener('change', function() {
+            const selectedId = this.value;
+            if (selectedId) {
+                selectCommonLog(selectedId);
+            }
+        });
+    }
+    
     // 导航切换
     if (navLinks && navLinks.length > 0) {
         navLinks.forEach(link => {
@@ -237,11 +379,13 @@ function addEventListeners() {
     const showMonthlyStatsBtn = document.getElementById('show-monthly-stats');
     const showYearlyStatsBtn = document.getElementById('show-yearly-stats');
     const showCategoryStatsBtn = document.getElementById('show-category-stats');
+    const showCommonStatsBtn = document.getElementById('show-common-stats');
     
     if (showDailyStatsBtn) showDailyStatsBtn.addEventListener('click', showDailyStats);
     if (showMonthlyStatsBtn) showMonthlyStatsBtn.addEventListener('click', showMonthlyStats);
     if (showYearlyStatsBtn) showYearlyStatsBtn.addEventListener('click', showYearlyStats);
     if (showCategoryStatsBtn) showCategoryStatsBtn.addEventListener('click', showCategoryStats);
+    if (showCommonStatsBtn) showCommonStatsBtn.addEventListener('click', showCommonStats);
     
     // 统计选择器自动触发统计
     const dailyStatsDate = document.getElementById('daily-stats-date');
@@ -249,6 +393,7 @@ function addEventListeners() {
     const yearlyStatsStart = document.getElementById('yearly-stats-start');
     const yearlyStatsEnd = document.getElementById('yearly-stats-end');
     const categoryStatsPeriod = document.getElementById('category-stats-period');
+    const commonStatsPeriod = document.getElementById('common-stats-period');
     
     // 每日统计 - 日期选择后自动触发
     if (dailyStatsDate) dailyStatsDate.addEventListener('change', showDailyStats);
@@ -263,6 +408,9 @@ function addEventListeners() {
     // 类别统计 - 周期选择后自动触发
     if (categoryStatsPeriod) categoryStatsPeriod.addEventListener('change', showCategoryStats);
     
+    // 常用日志统计 - 周期选择后自动触发
+    if (commonStatsPeriod) commonStatsPeriod.addEventListener('change', showCommonStats);
+    
     // 数据管理
     if (exportCsvBtn) exportCsvBtn.addEventListener('click', exportToCSV);
     if (exportWordBtn) exportWordBtn.addEventListener('click', exportAllToWord);
@@ -270,6 +418,12 @@ function addEventListeners() {
     if (clearAllDataBtn) clearAllDataBtn.addEventListener('click', () => {
         showConfirmDialog('确认清空所有数据', '此操作不可恢复，确定要清空所有日志数据吗？', clearAllData);
     });
+    
+    // 常用日志管理
+    const addCommonLogBtn = document.getElementById('add-common-log');
+    if (addCommonLogBtn) {
+        addCommonLogBtn.addEventListener('click', handleAddCommonLog);
+    }
     
     // 确认对话框
     const confirmYesBtn = document.getElementById('confirm-yes');
@@ -359,6 +513,9 @@ function switchSection(sectionId) {
                     break;
             }
         }
+    } else if (sectionId === 'data-management') {
+        // 渲染常用日志列表
+        renderCommonLogsList();
     }
     } else {
         console.warn(`未找到ID为${sectionId}的区域`);
@@ -376,22 +533,6 @@ function handleLogFormSubmit(e) {
     
     // 自动清除符号功能
     const autoClearEnabled = document.getElementById('auto-clear-symbols').checked;
-    if (autoClearEnabled) {
-        // 规则1：清除最后一个字符是；;或。.的符号
-        if (content) {
-            const lastChar = content.slice(-1);
-            if (['；', ';', '。', '.'].includes(lastChar)) {
-                content = content.slice(0, -1).trim();
-            }
-        }
-        
-        // 规则2：清除前几个字符是数字或者.的字符，如2.
-        if (content) {
-            // 匹配开头的数字和符号组合，如 "1."、"2.参加"、"3：会议" 等
-            // 支持中英文符号，无论中间是否有空格
-            content = content.replace(/^\d+[\.。:：；;]\s*/, '');
-        }
-    }
     
     // 确保类别不能为空，默认为"日常工作"
     let category = document.getElementById('log-category').value;
@@ -409,8 +550,8 @@ function handleLogFormSubmit(e) {
         // 编辑现有日志
         const index = logs.findIndex(log => log.id === id);
         if (index !== -1) {
-            // 检查是否包含分号分隔符（中文或英文）
-            const logParts = content.split(/[；;]/).map(part => part.trim()).filter(part => part);
+            // 检查是否包含分号分隔符（中文或英文）或换行符
+            const logParts = content.split(/[；;\n]/).map(part => part.trim()).filter(part => part);
             
             if (logParts.length > 1) {
                 // 如果包含多个条目，更新为第一个条目
@@ -440,6 +581,7 @@ function handleLogFormSubmit(e) {
                     };
                     logs.unshift(newLogItem);
                 }
+                recalculateSequenceNumbers(); // 重新计算序号
             } else {
                 // 单个条目，直接更新
                 logs[index] = {
@@ -453,12 +595,13 @@ function handleLogFormSubmit(e) {
                     sequenceNumber: logs[index].sequenceNumber || 1 // 保留原有序列号或设置为1
                 };
             }
+            recalculateSequenceNumbers(); // 重新计算序号
             showToast('日志更新成功');
         }
     } else {
         // 添加新日志
-        // 检查是否包含分号分隔符（中文或英文）
-        let logParts = content.split(/[；;]/).map(part => part.trim()).filter(part => part);
+        // 检查是否包含分号分隔符（中文或英文）或换行符
+        let logParts = content.split(/[；;\n]/).map(part => part.trim()).filter(part => part);
         
         // 计算当天已有的最大序列号
         const sameDayLogs = logs.filter(log => log.date === date);
@@ -477,7 +620,6 @@ function handleLogFormSubmit(e) {
         }
         
         // 对每条分割后的日志应用自动清除规则
-        const autoClearEnabled = document.getElementById('auto-clear-symbols').checked;
         if (autoClearEnabled) {
             logParts = logParts.map(part => {
                 let processedPart = part.trim();
@@ -577,7 +719,7 @@ function showTodayLogs() {
     html += `
         <div class="today-logs-header">
             <h4>当日日志 (${todayLogs.length}条)</h4>
-            <button onclick="copyDateLogs('${today}')" class="copy-date-btn">复制当日日志</button>
+            <button type="button" onclick="copyDateLogs('${today}')" class="copy-date-btn">复制当日日志</button>
         </div>
     `;
     
@@ -716,6 +858,7 @@ function deleteLog(id) {
         saveToLocalStorage();
         updateDashboard();
         renderLogList();
+        showTodayLogs();
         showToast('日志已删除');
     });
 }
@@ -771,6 +914,7 @@ function batchDeleteLogs() {
         saveToLocalStorage();
         updateDashboard();
         renderLogList();
+        showTodayLogs();
         showToast(`已删除 ${selectedIds.length} 条日志`);
     });
 }
@@ -882,8 +1026,8 @@ function renderLogList() {
                 <label for="select-date-${date}"><h3>${formattedDateHeader}</h3></label>
             </div>
             <div class="date-header-actions">
-                <button onclick="copyDateLogs('${date}')" class="copy-date-btn">复制当日日志</button>
-                <button onclick="deleteDateLogs('${date}')" class="delete-date-btn">删除当日日志</button>
+                <button type="button" onclick="copyDateLogs('${date}')" class="copy-date-btn">复制当日日志</button>
+                <button type="button" onclick="deleteDateLogs('${date}')" class="delete-date-btn">删除当日日志</button>
             </div>
         `;
         logItems.appendChild(dateHeader);
@@ -951,11 +1095,11 @@ function renderLogList() {
                     </div>
                 ` : ''}
                 <div class="log-item-actions">
-                    <button onclick="moveLogUp('${log.id}')" class="move-btn">上移</button>
-                    <button onclick="moveLogDown('${log.id}')" class="move-btn">下移</button>
-                    <button onclick="copyLog('${log.id}')" class="copy-btn">复制</button>
-                    <button onclick="editLog('${log.id}')">编辑</button>
-                    <button onclick="deleteLog('${log.id}')">删除</button>
+                    <button type="button" onclick="moveLogUp('${log.id}')" class="move-btn">上移</button>
+                    <button type="button" onclick="moveLogDown('${log.id}')" class="move-btn">下移</button>
+                    <button type="button" onclick="copyLog('${log.id}')" class="copy-btn">复制</button>
+                    <button type="button" onclick="editLog('${log.id}')">编辑</button>
+                    <button type="button" onclick="deleteLog('${log.id}')">删除</button>
                 </div>
             `;
             
@@ -1266,7 +1410,7 @@ function initChart() {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        stepSize: 1
+                        precision: 0
                     }
                 }
             }
@@ -1372,6 +1516,9 @@ function switchStatsTab(tabId) {
             break;
         case 'category':
             showCategoryStats();
+            break;
+        case 'common':
+            showCommonStats();
             break;
     }
 }
@@ -1722,6 +1869,109 @@ function getPeriodText(period) {
     };
     return texts[period] || period;
 }
+
+// 显示常用日志统计
+function showCommonStats() {
+    const period = document.getElementById('common-stats-period').value;
+    const resultDiv = document.getElementById('common-stats-result');
+    
+    // 显示加载状态
+    resultDiv.innerHTML = '<div class="loading"><div class="loading-spinner"></div></div>';
+    
+    // 模拟加载延迟
+    setTimeout(() => {
+        let periodLogs = logs;
+        
+        // 根据选择的周期筛选日志
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        const yearStr = todayStr.substring(0, 4);
+        const monthStr = todayStr.substring(0, 7);
+        
+        switch (period) {
+            case 'today':
+                periodLogs = logs.filter(log => log.date === todayStr);
+                break;
+            case 'week':
+                const weekAgo = new Date(today);
+                weekAgo.setDate(today.getDate() - 7);
+                const weekAgoStr = weekAgo.toISOString().split('T')[0];
+                periodLogs = logs.filter(log => log.date >= weekAgoStr);
+                break;
+            case 'month':
+                const monthAgo = new Date(today);
+                monthAgo.setDate(today.getDate() - 30);
+                const monthAgoStr = monthAgo.toISOString().split('T')[0];
+                periodLogs = logs.filter(log => log.date >= monthAgoStr);
+                break;
+            case 'year':
+                periodLogs = logs.filter(log => log.date.startsWith(yearStr));
+                break;
+        }
+        
+        if (periodLogs.length === 0) {
+            resultDiv.innerHTML = '<p>该时间段没有日志记录</p>';
+            return;
+        }
+        
+        // 统计每条日志内容出现的频率
+        const contentStats = {};
+        periodLogs.forEach(log => {
+            const content = log.content.trim();
+            if (content) {
+                contentStats[content] = (contentStats[content] || 0) + 1;
+            }
+        });
+        
+        // 转换为数组并按频率排序
+        const sortedContentStats = Object.entries(contentStats)
+            .map(([content, count]) => ({ content, count }))
+            .sort((a, b) => b.count - a.count);
+        
+        // 取前20条最常用的日志
+        const topCommonLogs = sortedContentStats.slice(0, 20);
+        
+        let html = `<h4>${getPeriodText(period)} 最常用日志</h4>
+                    <p>总计日志：<span class="stats-value">${periodLogs.length}</span> 条，去重后：<span class="stats-value">${sortedContentStats.length}</span> 条
+                    
+                    <!-- 常用日志列表 -->
+                    <div class="common-stats-list">`;
+        
+        topCommonLogs.forEach((item, index) => {
+            const percentage = Math.round((item.count / periodLogs.length) * 100);
+            const isAlreadyInCommonLogs = commonLogs.some(log => log.content === item.content);
+            const escapedContent = item.content.replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+            
+            html += `
+                <div class="common-stats-item">
+                    <div class="common-stats-rank">${index + 1}</div>
+                    <div class="common-stats-content">
+                        <div class="common-stats-text">${item.content}</div>
+                        <div class="common-stats-meta">
+                            <span class="common-stats-count">
+                                <span class="stats-value">${item.count}</span> 次
+                            </span>
+                            <span class="common-stats-percentage">(${percentage}%)</span>
+                        </div>
+                    </div>
+                    <div class="common-stats-bar">
+                        <div class="common-stats-bar-fill" style="width: ${percentage}%"></div>
+                    </div>
+                    <button type="button" 
+                            onclick="addToCommonLogsFromStats('${escapedContent}')"
+                            class="add-to-common-btn"
+                            ${isAlreadyInCommonLogs ? 'disabled' : ''}>
+                        ${isAlreadyInCommonLogs ? '已添加' : '添加'}
+                    </button>
+                </div>
+            `;
+        });
+        
+        html += `</div>`;
+        resultDiv.innerHTML = html;
+    }, 300);
+}
+
 
 // 更新类别统计图表
 function updateCategoryChart(data, labels) {
@@ -2106,6 +2356,145 @@ window.batchDeleteLogs = batchDeleteLogs;
 window.updateBatchDeleteButton = updateBatchDeleteButton;
 window.saveCompanyName = saveCompanyName;
 window.exportAllToWord = exportAllToWord;
+window.addToCommonLogsFromStats = addToCommonLogsFromStats;
+window.editCommonLog = editCommonLog;
+window.deleteCommonLogConfirm = deleteCommonLogConfirm;
+window.moveCommonLogUp = moveCommonLogUp;
+window.moveCommonLogDown = moveCommonLogDown;
+
+// 处理添加常用日志
+function handleAddCommonLog() {
+    const contentInput = document.getElementById('new-common-log-content');
+    const categoryInput = document.getElementById('new-common-log-category');
+    const tagsInput = document.getElementById('new-common-log-tags');
+    
+    const content = contentInput.value.trim();
+    const category = categoryInput.value;
+    const tags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+    
+    if (!content) {
+        showToast('请输入日志内容', 'warning');
+        return;
+    }
+    
+    addCommonLog(content, category, tags);
+    
+    // 清空输入框
+    contentInput.value = '';
+    tagsInput.value = '';
+    
+    // 重新渲染列表
+    renderCommonLogsList();
+    
+    // 更新日志记录页面的下拉列表
+    initCommonLogsSelect();
+    
+    showToast('常用日志添加成功');
+}
+
+// 渲染常用日志列表
+function renderCommonLogsList() {
+    const commonLogsList = document.getElementById('common-logs-list');
+    if (!commonLogsList) return;
+    
+    if (commonLogs.length === 0) {
+        commonLogsList.innerHTML = '<div class="empty-message">暂无常用日志</div>';
+        return;
+    }
+    
+    let html = '<div class="common-logs-items">';
+    
+    commonLogs.forEach((commonLog, index) => {
+        html += `
+            <div class="common-log-item" data-id="${commonLog.id}">
+                <div class="common-log-content">
+                    <div class="common-log-text">${commonLog.content}</div>
+                    <div class="common-log-meta">
+                        <span class="common-log-category">${commonLog.category}</span>
+                        ${commonLog.tags.length > 0 ? `
+                            <span class="common-log-tags">${commonLog.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</span>
+                        ` : ''}
+                    </div>
+                </div>
+                <div class="common-log-actions">
+                    <button type="button" onclick="moveCommonLogUp('${commonLog.id}')" class="move-btn" ${index === 0 ? 'disabled' : ''}>上移</button>
+                    <button type="button" onclick="moveCommonLogDown('${commonLog.id}')" class="move-btn" ${index === commonLogs.length - 1 ? 'disabled' : ''}>下移</button>
+                    <button type="button" onclick="editCommonLog('${commonLog.id}')" class="edit-btn">编辑</button>
+                    <button type="button" onclick="deleteCommonLogConfirm('${commonLog.id}')" class="delete-btn">删除</button>
+                </div>
+            </div>
+        `;
+    });
+    
+    html += '</div>';
+    commonLogsList.innerHTML = html;
+}
+
+// 编辑常用日志
+function editCommonLog(id) {
+    const commonLog = commonLogs.find(log => log.id === id);
+    if (!commonLog) return;
+    
+    const contentInput = document.getElementById('new-common-log-content');
+    const categoryInput = document.getElementById('new-common-log-category');
+    const tagsInput = document.getElementById('new-common-log-tags');
+    
+    contentInput.value = commonLog.content;
+    categoryInput.value = commonLog.category;
+    tagsInput.value = commonLog.tags.join(', ');
+    
+    // 更改按钮为更新模式
+    const addBtn = document.getElementById('add-common-log');
+    addBtn.textContent = '更新';
+    addBtn.dataset.editId = id;
+    
+    // 移除旧的事件监听器
+    const newBtn = addBtn.cloneNode(true);
+    addBtn.parentNode.replaceChild(newBtn, addBtn);
+    
+    newBtn.addEventListener('click', function() {
+        const editId = this.dataset.editId;
+        const content = contentInput.value.trim();
+        const category = categoryInput.value;
+        const tags = tagsInput.value.split(',').map(tag => tag.trim()).filter(tag => tag);
+        
+        if (!content) {
+            showToast('请输入日志内容', 'warning');
+            return;
+        }
+        
+        updateCommonLog(editId, content, category, tags);
+        
+        // 清空输入框
+        contentInput.value = '';
+        tagsInput.value = '';
+        
+        // 重置按钮为添加模式
+        this.textContent = '添加';
+        delete this.dataset.editId;
+        
+        // 重新渲染列表
+        renderCommonLogsList();
+        
+        // 更新日志记录页面的下拉列表
+        initCommonLogsSelect();
+        
+        showToast('常用日志更新成功');
+    });
+}
+
+// 删除常用日志确认
+function deleteCommonLogConfirm(id) {
+    const commonLog = commonLogs.find(log => log.id === id);
+    if (!commonLog) return;
+    
+    showConfirmDialog('确认删除', `确定要删除常用日志"${commonLog.content.substring(0, 30)}..."吗？`, () => {
+        deleteCommonLog(id);
+        renderCommonLogsList();
+        initCommonLogsSelect();
+        showToast('常用日志已删除');
+    });
+}
 
 // 页面加载完成后初始化
 window.addEventListener('DOMContentLoaded', initApp);

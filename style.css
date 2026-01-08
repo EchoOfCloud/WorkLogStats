@@ -1315,7 +1315,14 @@ button.danger:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     margin-top: 1.5rem;
     position: relative;
-    height: 400px;
+    height: 500px;
+    overflow: hidden;
+}
+
+.chart-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+    max-height: calc(100% - 60px);
 }
 
 .chart-container::after {
@@ -2144,3 +2151,327 @@ textarea.form-control {
 .content-options {
     margin-top: 0.5rem !important;
 }
+
+/* 常用日志管理样式 */
+.common-logs-management {
+    margin-top: 1rem;
+}
+
+.add-common-log-form {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.add-common-log-form input,
+.add-common-log-form select {
+    flex: 1;
+    min-width: 150px;
+    padding: 0.6rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 0.9rem;
+}
+
+.add-common-log-form button {
+    padding: 0.6rem 1.2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.add-common-log-form button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.common-logs-list {
+    max-height: 400px;
+    overflow-y: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    background: #f8fafc;
+}
+
+.common-logs-items {
+    display: flex;
+    flex-direction: column;
+}
+
+.common-log-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: white;
+    border-bottom: 1px solid #e2e8f0;
+    transition: all 0.2s ease;
+}
+
+.common-log-item:last-child {
+    border-bottom: none;
+}
+
+.common-log-item:hover {
+    background: #f8f9fa;
+    transform: translateX(3px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.common-log-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.common-log-text {
+    font-weight: 500;
+    color: #374151;
+    margin-bottom: 0.3rem;
+    word-break: break-word;
+}
+
+.common-log-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.common-log-category {
+    background: #e0e7ff;
+    color: #4338ca;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.common-log-tags {
+    display: flex;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+}
+
+.common-log-tags .tag {
+    background: #f3f4f6;
+    color: #4b5563;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
+
+.common-log-actions {
+    display: flex;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.common-log-actions button {
+    padding: 0.3rem 0.6rem;
+    font-size: 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+    transition: all 0.2s ease;
+    font-weight: 500;
+}
+
+.common-log-actions button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.common-log-actions button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.common-log-actions .move-btn {
+    background: #6c757d;
+}
+
+.common-log-actions .edit-btn {
+    background: #28a745;
+}
+
+.common-log-actions .delete-btn {
+    background: #dc3545;
+}
+
+/* 滚动条样式 */
+.common-logs-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.common-logs-list::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.common-logs-list::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 3px;
+}
+
+.common-logs-list::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}
+
+/* 常用日志统计样式 */
+.common-stats-list {
+    margin-top: 1.5rem;
+    display: grid;
+    gap: 1rem;
+}
+
+.common-stats-item {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.25rem;
+    background: white;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.common-stats-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.15);
+    border-color: #667eea;
+}
+
+.common-stats-rank {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    font-weight: 700;
+    font-size: 1.25rem;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.common-stats-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.common-stats-text {
+    font-size: 1rem;
+    color: #1f2937;
+    margin-bottom: 0.75rem;
+    word-break: break-word;
+    line-height: 1.5;
+    font-weight: 500;
+}
+
+.common-stats-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: 0.875rem;
+    color: #6b7280;
+}
+
+.common-stats-count {
+    font-weight: 600;
+    color: #667eea;
+    background: rgba(102, 126, 234, 0.1);
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+}
+
+.common-stats-percentage {
+    color: #9ca3af;
+    font-weight: 500;
+}
+
+.common-stats-bar {
+    width: 100px;
+    height: 6px;
+    background: #f1f5f9;
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.common-stats-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+    position: relative;
+}
+
+.common-stats-bar-fill::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        transform: translateX(-100%);
+    }
+    100% {
+        transform: translateX(100%);
+    }
+}
+
+
+/* 添加到常用日志按钮样式 */
+.add-to-common-btn {
+    padding: 0.625rem 1.25rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.25);
+    letter-spacing: 0.025em;
+}
+
+.add-to-common-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.35);
+    background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+}
+
+.add-to-common-btn:active:not(:disabled) {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(102, 126, 234, 0.25);
+}
+
+.add-to-common-btn:disabled {
+    background: #f3f4f6;
+    color: #9ca3af;
+    cursor: not-allowed;
+    box-shadow: none;
+    font-weight: 500;
+}
+
+
