@@ -1,7 +1,7 @@
 {
-  "name": "work-log-statistics-system",
+  "name": "work-trace-intelligence",
   "version": "1.0.0",
-  "description": "工作日志统计系统 - 一个基于Web的轻量级日志管理工具",
+  "description": "基于Web的轻量级日志管理工具",
   "main": "index.html",
   "scripts": {
     "build": "echo 'No build needed for static HTML'"
@@ -12,7 +12,7 @@
     "web-app",
     "front-end"
   ],
-  "author": "EchoOfCloud",
+
   "license": "MIT",
   "devDependencies": {},
   "dependencies": {},

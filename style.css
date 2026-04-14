@@ -959,7 +959,22 @@ button.danger:hover {
     align-items: center;
 }
 
-/* 已移至.date-header-left h3 */
+.date-header-left h3 {
+    margin: 0;
+    color: #374151;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.date-header-left h3 .weekday {
+    margin-left: 8px;
+    color: #667eea;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: rgba(102, 126, 234, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
 
 .date-header-actions {
     display: flex;

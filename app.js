@@ -1,10 +1,11 @@
-// 日志统计系统 - 应用核心功能
+// 工作迹智通 - 应用核心功能
 
 // 全局变量
 let logs = [];
 let currentPage = 1;
 const itemsPerPage = 10;
 let filteredLogs = [];
+let isFilterApplied = false; // 标记是否应用了筛选
 let companyName = 'EchoOfCloud'; // 公司名称，默认为"EchoOfCloud"
 let currentTimeRange = 7; // 当前时间范围，默认7天
 let commonLogs = []; // 常用日志列表
@@ -886,6 +887,7 @@ function applyFilter() {
         return matchesKeyword && matchesDateRange && matchesCategory;
     });
     
+    isFilterApplied = true; // 标记已应用筛选
     currentPage = 1;
     renderLogList();
 }
@@ -897,6 +899,7 @@ function clearFilter() {
     document.getElementById('filter-date-end').value = '';
     document.getElementById('filter-category').value = '';
     filteredLogs = [];
+    isFilterApplied = false; // 标记已清除筛选
     currentPage = 1;
     renderLogList();
 }
@@ -934,7 +937,10 @@ function updateBatchDeleteButton() {
 
 // 渲染日志列表
 function renderLogList() {
-    const displayLogs = filteredLogs.length > 0 ? filteredLogs : logs;
+    // 检查是否应用了筛选条件
+    const hasAppliedFilter = isFilterApplied;
+    // 如果应用了筛选条件，使用 filteredLogs；否则使用 logs
+    const displayLogs = hasAppliedFilter ? filteredLogs : logs;
     
     // 按日期和序列号排序
     const sortedLogs = [...displayLogs].sort((a, b) => {
@@ -960,7 +966,12 @@ function renderLogList() {
     if (paginatedLogs.length === 0) {
         const emptyMessage = document.createElement('p');
         emptyMessage.className = 'empty-message';
-        emptyMessage.textContent = '暂无日志记录';
+        // 根据是否应用了筛选条件显示不同的提示信息
+        if (hasAppliedFilter) {
+            emptyMessage.textContent = '没有符合条件的日志';
+        } else {
+            emptyMessage.textContent = '暂无日志记录';
+        }
         logItems.appendChild(emptyMessage);
         pagination.innerHTML = '';
         return;
@@ -1020,10 +1031,15 @@ function renderLogList() {
         // 格式化日期为 YYYY.MM.DD
         const formattedDateHeader = date.replace(/-/g, '.');
         
+        // 获取星期几
+        const dateObj = new Date(date);
+        const weekdays = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+        const weekday = weekdays[dateObj.getDay()];
+        
         dateHeader.innerHTML = `
             <div class="date-header-left">
                 <input type="checkbox" class="select-date-checkbox" data-date="${date}" id="select-date-${date}">
-                <label for="select-date-${date}"><h3>${formattedDateHeader}</h3></label>
+                <label for="select-date-${date}"><h3>${formattedDateHeader} <span class="weekday">${weekday}</span></h3></label>
             </div>
             <div class="date-header-actions">
                 <button type="button" onclick="copyDateLogs('${date}')" class="copy-date-btn">复制当日日志</button>
@@ -1309,16 +1325,85 @@ function renderPagination(totalPages) {
     });
     pagination.appendChild(prevBtn);
     
-    // 页码按钮
-    for (let i = 1; i <= totalPages; i++) {
-        const pageBtn = document.createElement('button');
-        pageBtn.textContent = i;
-        pageBtn.className = i === currentPage ? 'active' : '';
-        pageBtn.addEventListener('click', () => {
-            currentPage = i;
-            renderLogList();
-        });
-        pagination.appendChild(pageBtn);
+    // 页码按钮 - 智能显示
+    const maxVisiblePages = 5; // 最多显示的页码数量
+    
+    if (totalPages <= maxVisiblePages) {
+        // 总页数较少，显示所有页码
+        for (let i = 1; i <= totalPages; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.textContent = i;
+            pageBtn.className = i === currentPage ? 'active' : '';
+            pageBtn.addEventListener('click', () => {
+                currentPage = i;
+                renderLogList();
+            });
+            pagination.appendChild(pageBtn);
+        }
+    } else {
+        // 总页数较多，智能显示页码
+        const halfVisible = Math.floor(maxVisiblePages / 2);
+        let startPage = Math.max(1, currentPage - halfVisible);
+        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+        
+        // 调整起始页码，确保显示完整的可见范围
+        if (endPage - startPage + 1 < maxVisiblePages) {
+            startPage = Math.max(1, endPage - maxVisiblePages + 1);
+        }
+        
+        // 显示第一页
+        if (startPage > 1) {
+            const firstPageBtn = document.createElement('button');
+            firstPageBtn.textContent = '1';
+            firstPageBtn.className = 1 === currentPage ? 'active' : '';
+            firstPageBtn.addEventListener('click', () => {
+                currentPage = 1;
+                renderLogList();
+            });
+            pagination.appendChild(firstPageBtn);
+            
+            // 添加省略号
+            if (startPage > 2) {
+                const ellipsis = document.createElement('span');
+                ellipsis.textContent = '...';
+                ellipsis.style.margin = '0 0.5rem';
+                ellipsis.style.color = '#999';
+                pagination.appendChild(ellipsis);
+            }
+        }
+        
+        // 显示中间页码
+        for (let i = startPage; i <= endPage; i++) {
+            const pageBtn = document.createElement('button');
+            pageBtn.textContent = i;
+            pageBtn.className = i === currentPage ? 'active' : '';
+            pageBtn.addEventListener('click', () => {
+                currentPage = i;
+                renderLogList();
+            });
+            pagination.appendChild(pageBtn);
+        }
+        
+        // 显示最后一页
+        if (endPage < totalPages) {
+            // 添加省略号
+            if (endPage < totalPages - 1) {
+                const ellipsis = document.createElement('span');
+                ellipsis.textContent = '...';
+                ellipsis.style.margin = '0 0.5rem';
+                ellipsis.style.color = '#999';
+                pagination.appendChild(ellipsis);
+            }
+            
+            const lastPageBtn = document.createElement('button');
+            lastPageBtn.textContent = totalPages;
+            lastPageBtn.className = totalPages === currentPage ? 'active' : '';
+            lastPageBtn.addEventListener('click', () => {
+                currentPage = totalPages;
+                renderLogList();
+            });
+            pagination.appendChild(lastPageBtn);
+        }
     }
     
     // 下一页按钮
